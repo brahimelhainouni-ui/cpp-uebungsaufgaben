@@ -1,0 +1,185 @@
+#include <iostream>
+#include <string>
+#include <stdexcept>
+#include <iomanip>
+
+using namespace std;
+
+class Weg{
+private:
+    string beginn = "FRANKFURT";
+    string ende= "Oued zem ";
+    double distanz=0;
+public:
+    string get_beginn() const {return beginn;}
+    string get_ende() const {return ende;}
+    double get_distanz() const {return distanz;}
+
+    void set_beginn(string b) {beginn = b;}
+    void set_ende(string e) {ende = e;}
+    void set_distanz(double d) {
+        if(d<0){
+            cout<< "no negative zahlen!";
+            return;
+        } else distanz = d;
+    }
+
+    Weg() : beginn("frankfurt"), ende("koeln"),distanz(0){}
+    Weg(string b,string e, double d) : beginn(b), ende(e), distanz(d) {}
+
+
+    friend ostream& operator<<(ostream& ausgabe, const Weg& w);
+
+
+
+    void input() {
+        double zahl= -1;
+        cout<< "an WElchem ort beginnt ihr weg? ";
+        getline(cin,beginn);
+        cout<< "wo endet ihr weg ? ";
+        getline(cin,ende);
+        cout<< " wie lange ist der weg?";
+        cin>>zahl;
+        while(zahl<0){
+
+            cout << "wie lang ist der weg? bitte nur positive zahlen";
+            cin>> zahl;
+            if (zahl<0){cout << " eingabe bitte erneurt versuchen:"<< endl; }
+
+        }
+        distanz = zahl;
+        cin.ignore();
+
+
+    }
+    Weg operator+(const Weg& rechts) const {
+        if(this->ende != rechts.beginn){throw logic_error("ende and beginn nicht gleich "); }
+        return Weg(this->beginn, rechts.ende, this->distanz + rechts.distanz);
+
+
+    }
+
+};
+
+
+ostream& operator<<(ostream& ausgabe, const Weg& w){
+    ausgabe << w.get_beginn() << "-" << w.get_ende() << ":" << w.get_distanz() <<" km ";
+    return ausgabe;
+}
+
+class Route{
+private:
+    Weg* wege;
+    int anz;
+    bool zusammen() const ;
+public:
+    void add_weg(const Weg& w );
+    void print()const ;
+    Route(); //konstructor
+    ~Route(); //  distruktor
+    Route& operator=(const Route& r); // operatror
+    Route(const Route& r); //copy konstruktor
+
+};
+
+Route::Route()  {
+    wege = nullptr;
+    anz=0;
+}
+//  distruktor
+Route::~Route(){
+    if(wege!=0){delete[] wege;}
+    wege= 0;
+
+}
+
+// copy konstruktor
+Route::Route(const Route& r){
+    if(r.anz>0){
+        wege = new Weg[r.anz];
+        anz= r.anz;
+        for(int i=0;i<anz;i++){
+            wege[i]= r.wege[i];
+
+        }
+    }
+}
+
+//anweisung operator
+
+Route& Route::operator=(const Route& r){
+    if(wege!=0){delete[] wege;}
+    anz = r.anz;
+    if(anz>0){
+        wege = new Weg[anz];
+        for(int i=0;i<anz;i++)
+            wege[i] = r.wege[i];
+    }else{ wege = nullptr;}
+
+    return *this;
+}
+
+bool Route::zusammen() const {
+    if(anz<0) return false;
+    for (int i =0; i<anz-1; i++){
+        if(wege[i].get_ende() != wege[i+1].get_beginn()){
+            return false;
+        }
+
+    }
+    double gesamt=0;
+    for(int i =0 ; i<anz; i++){
+        gesamt = gesamt + wege[i].get_distanz();
+    }
+    cout<< "start :" << wege[0].get_beginn();
+    cout<< "ende : " << wege[anz-1].get_ende();
+    cout<< "gesamtstrecke : " << gesamt << fixed << setprecision(2) << " km "<< endl;
+    return true;
+}
+void Route::add_weg(const Weg& w){
+    Weg* temp = new Weg[anz+1];
+    for (int i=0; i<anz; i++){
+        temp[i]= wege[i];
+    }
+    temp[anz]= w;
+    if (wege!=0){delete[] wege;}
+    wege = temp;
+    anz++;
+}
+
+void Route::print() const {
+    for (int i =0; i<anz; i++){
+        cout<< wege[i] ;
+    }
+    if(!zusammen() ){
+        cout<< " diese ist keine zs route " <<endl;
+    }
+}
+
+int main(){
+
+    Weg a,def1, def2;
+
+    Weg f_k("FRANKFURT", " Koeln", 190.0);
+    Weg k_ma(" Koeln", "mainz", 130.0);
+
+    def1.set_beginn("Hmaburg");
+    def1.set_ende("Bremen");
+    def1.set_distanz(120.0);
+
+
+    Route zsm,nzsm;
+    zsm.add_weg(Weg("Rabat", "FRANKFURT", 2990));
+
+    zsm.add_weg(Weg("FRANKFURT","Tanger",2000));
+
+
+    zsm.print();
+
+
+
+
+    return 0;
+
+
+}
